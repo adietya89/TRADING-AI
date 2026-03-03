@@ -1,45 +1,43 @@
-import yfinance as yf
-import pandas as pd
-import numpy as np
-from xgboost import XGBClassifier
+import streamlit as st
+import plotly.express as px
+import plotly.graph_objects as go
+from utils import prepare_data, model_xgb, features
+from chatgpt_integration import ask_ai
 
-features = ["Close", "MA20", "MA50"]
+st.set_page_config(layout="wide")
+st.title("📈 AI Trading Hedge Fund Dashboard")
 
-def prepare_data(saham):
-    try:
-        df = yf.download(saham + ".JK", period="6mo", progress=False)
-        df = df.reset_index()
-        df = df[['Date','Open','High','Low','Close','Volume']]
+# Pilih saham
+saham_list = ["BBRI","BBCA","BMRI","TLKM","ASII","ADRO","ANTM"]
+selected_saham = st.selectbox("Pilih Saham", saham_list)
 
-        # MA20 & MA50
-        df['MA20'] = df['Close'].rolling(20).mean()
-        df['MA50'] = df['Close'].rolling(50).mean()
+# Ambil data
+df = prepare_data(selected_saham)
+if df is None or df.empty:
+    st.error("Data tidak tersedia.")
+    st.stop()
 
-        # RSI 14
-        delta = df['Close'].diff()
-        up = delta.clip(lower=0)
-        down = -1*delta.clip(upper=0)
-        roll_up = up.rolling(14).mean()
-        roll_down = down.rolling(14).mean()
-        rs = roll_up / roll_down
-        df['RSI'] = 100 - (100 / (1+rs))
+# Grafik Close + MA20 + MA50 + Support/Resistance + RSI + MACD
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'], name="Close"))
+if 'MA20' in df.columns:
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['MA20'], name="MA20"))
+if 'MA50' in df.columns:
+    fig.add_trace(go.Scatter(x=df['Date'], y=df['MA50'], name="MA50"))
+support = df['Close'].min()
+resistance = df['Close'].max()
+fig.add_hline(y=support, line_dash="dot", line_color="green", annotation_text="Support")
+fig.add_hline(y=resistance, line_dash="dot", line_color="red", annotation_text="Resistance")
+st.plotly_chart(fig, use_container_width=True)
 
-        # MACD
-        df['EMA12'] = df['Close'].ewm(span=12, adjust=False).mean()
-        df['EMA26'] = df['Close'].ewm(span=26, adjust=False).mean()
-        df['MACD'] = df['EMA12'] - df['EMA26']
-        df['Signal'] = df['MACD'].ewm(span=9, adjust=False).mean()
+# Probabilitas Naik
+last = df[features].tail(1)
+proba = model_xgb.predict_proba(last)[0][1]
+st.metric("Probabilitas Naik (%)", round(proba*100,2))
 
-        df = df.dropna()
-        return df
-    except Exception as e:
-        print(f"Error ambil data {saham}: {e}")
-        return None
-
-# Dummy XGB model
-def load_xgb_model():
-    model = XGBClassifier()
-    model.predict_proba = lambda X: np.array([[0.3,0.7]])  # dummy 70% naik
-    return model
-
-model_xgb = load_xgb_model()
+# AI Lokal
+st.subheader("🤖 AI Analisis Saham")
+question = st.text_input("Tanyakan sesuatu tentang saham ini:")
+if question:
+    answer = ask_ai(selected_saham, df, question)
+    st.write(answer)
