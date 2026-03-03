@@ -14,20 +14,43 @@ df = prepare_data(selected_saham)
 if df is None or df.empty:
     st.error("Data tidak tersedia.")
     st.stop()
-# Plot grafik Close + MA20 + MA50
-df_long = df.melt(id_vars=["Date"], value_vars=["Close", "MA20", "MA50"],
-                  var_name="Indicator", value_name="Value")
-fig = px.line(df_long, x="Date", y="Value", color="Indicator",
-              title=f"{selected_saham} Chart")
+
+# Plot grafik
+df_long = df.melt(
+    id_vars=["Date"],
+    value_vars=["Close", "MA20", "MA50"],
+    var_name="Indicator",
+    value_name="Value"
+)
+
+fig = px.line(
+    df_long,
+    x="Date",
+    y="Value",
+    color="Indicator",
+    title=f"{selected_saham} Chart"
+)
+
 st.plotly_chart(fig)
 
-# Prediksi probabilitas naik
+# Probabilitas naik
 last = df[features].tail(1)
 proba = model_xgb.predict_proba(last)[0][1]
-st.metric("Probabilitas Naik (%)", round(proba*100,2))
+st.metric("Probabilitas Naik (%)", round(proba * 100, 2))
 
-# Input pertanyaan user
+
+# =============================
+# 🔥 BAGIAN AI TARUH DI SINI
+# =============================
+
+st.subheader("🤖 AI Analysis")
+
+# Pilih mode AI
+ai_mode = st.radio("Mode AI:", ["Local AI", "ChatGPT"])
+
 question = st.text_input("Tanyakan sesuatu tentang saham ini:")
+
 if question:
-    answer = ask_ai(selected_saham, df, question)
+    mode = "local" if ai_mode == "Local AI" else "gpt"
+    answer = ask_ai(selected_saham, df, question, mode)
     st.write(answer)
