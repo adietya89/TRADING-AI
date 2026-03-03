@@ -4,6 +4,6 @@ numpy
 plotly
 yfinance
 xgboost
+scikit-learn
 joblib
 openai
-scikit-learn
