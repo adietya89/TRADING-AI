@@ -1,48 +1,39 @@
-import pandas as pd
-import numpy as np
-
-def analyze_stock(df, saham):
+def analyze_stock(df, saham, question=None):
     close = df['Close'].iloc[-1]
     ma20 = df['MA20'].iloc[-1]
     ma50 = df['MA50'].iloc[-1]
-
-    # Trend
-    trend = "bullish" if ma20 > ma50 else "bearish / sideways"
-
-    # Support & Resistance sederhana
+    rsi = df['RSI'].iloc[-1]
+    macd = df['MACD'].iloc[-1]
+    signal = df['Signal'].iloc[-1]
     support = df['Close'].min()
     resistance = df['Close'].max()
 
-    # RSI sederhana
-    delta = df['Close'].diff()
-    up = delta.clip(lower=0)
-    down = -1*delta.clip(upper=0)
-    roll_up = up.rolling(14).mean()
-    roll_down = down.rolling(14).mean()
-    rs = roll_up / roll_down
-    rsi = 100 - (100 / (1 + rs))
-    rsi_last = rsi.iloc[-1]
+    trend = "bullish" if ma20 > ma50 else "bearish / sideways"
+    macd_trend = "Buy" if macd > signal else "Sell / Sideways"
+    rsi_status = "Overbought" if rsi>70 else "Oversold" if rsi<30 else "Netral"
 
-    # Output AI Lokal
     text = f"""
 📈 Analisis Saham {saham} (AI Lokal)
 Harga terakhir: Rp {close:,.0f}
-Trend: {trend}
+Trend MA: {trend}
 MA20: {ma20:,.0f}, MA50: {ma50:,.0f}
+RSI: {rsi:.2f} → {rsi_status}
+MACD: {macd:.2f} ({macd_trend})
 Support: Rp {support:,.0f}, Resistance: Rp {resistance:,.0f}
-RSI: {rsi_last:.2f} → {'Overbought' if rsi_last>70 else 'Oversold' if rsi_last<30 else 'Netral'}
 
 Skenario Pergerakan:
 - Jika harga menembus resistance → potensi bullish
 - Jika harga turun di bawah support → potensi koreksi
 
-Strategi Umum:
+Strategi:
 - Trader Harian: Entry dekat support, TP dekat resistance
 - Swing Trader: Tunggu breakout jelas sebelum akumulasi
 
-⚠️ Catatan: Ini analisis lokal, bukan rekomendasi beli/jual.
+Pertanyaanmu: {question if question else "Tidak ada pertanyaan spesifik"}
+
+⚠️ Catatan: Analisis lokal, bukan rekomendasi beli/jual.
 """
     return text
 
 def ask_ai(saham, df, question=None, mode="local"):
-    return analyze_stock(df, saham)
+    return analyze_stock(df, saham, question)
