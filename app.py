@@ -74,13 +74,18 @@ with tab1:
                                        line=dict(color='purple', width=2, dash='dot')))
     
     # Support & Resistance aman
+    # --- Support & Resistance aman ---
     if 'Close' in df.columns and not df['Close'].empty:
-        support = df['Close'].min()
-        resistance = df['Close'].max()
-        if pd.notna(support):
-            fig_price.add_hline(y=float(support), line_dash="dot", line_color="green", annotation_text="Support")
-        if pd.notna(resistance):
-            fig_price.add_hline(y=float(resistance), line_dash="dot", line_color="red", annotation_text="Resistance")
+        support_val = df['Close'].min()
+        resistance_val = df['Close'].max()
+
+         # Pastikan scalar & bukan NaN
+        if support_val is not None and not pd.isna(support_val):
+           fig_price.add_hline(y=float(support_val), line_dash="dot",
+                            line_color="green", annotation_text="Support")
+        if resistance_val is not None and not pd.isna(resistance_val):
+           fig_price.add_hline(y=float(resistance_val), line_dash="dot",
+                            line_color="red", annotation_text="Resistance")
     
     fig_price.update_layout(title=f"{selected_saham} Harga & MA",
                             xaxis_title="Tanggal", yaxis_title="Harga",
