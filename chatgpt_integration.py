@@ -9,7 +9,7 @@ def ask_ai(saham, df, question):
 
     try:
         response = openai.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",  # Ganti dari gpt-4 ke gpt-3.5-turbo
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5
         )
