@@ -5,7 +5,7 @@ import numpy as np
 from utils import prepare_data, model_xgb, features
 from chatgpt_integration import ask_ai
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="AI Trading Dashboard")
 st.title("📈 AI Trading Hedge Fund Dashboard")
 
 # --- Pilih Saham ---
@@ -41,55 +41,62 @@ def compute_MACD(data, fast=12, slow=26, signal=9):
 
 df['MACD'], df['MACD_signal'] = compute_MACD(df['Close'])
 
-# --- Grafik Harga + MA ---
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'], name="Close", line=dict(color='blue')))
-if 'MA20' in df.columns:
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['MA20'], name="MA20", line=dict(color='orange')))
-if 'MA50' in df.columns:
-    fig.add_trace(go.Scatter(x=df['Date'], y=df['MA50'], name="MA50", line=dict(color='purple')))
-
-# --- Support & Resistance ---
-support = df['Close'].min()
-resistance = df['Close'].max()
-try:
-    support = float(support)
-except:
-    support = None
-try:
-    resistance = float(resistance)
-except:
-    resistance = None
-if support is not None:
-    fig.add_hline(y=support, line_dash="dot", line_color="green", annotation_text="Support")
-if resistance is not None:
-    fig.add_hline(y=resistance, line_dash="dot", line_color="red", annotation_text="Resistance")
-
-st.plotly_chart(fig, use_container_width=True)
-
-# --- Grafik RSI ---
-fig_rsi = go.Figure()
-fig_rsi.add_trace(go.Scatter(x=df['Date'], y=df['RSI'], name="RSI", line=dict(color='magenta')))
-fig_rsi.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Overbought")
-fig_rsi.add_hline(y=30, line_dash="dot", line_color="green", annotation_text="Oversold")
-st.plotly_chart(fig_rsi, use_container_width=True)
-
-# --- Grafik MACD ---
-fig_macd = go.Figure()
-fig_macd.add_trace(go.Scatter(x=df['Date'], y=df['MACD'], name="MACD", line=dict(color='blue')))
-fig_macd.add_trace(go.Scatter(x=df['Date'], y=df['MACD_signal'], name="Signal", line=dict(color='orange')))
-st.plotly_chart(fig_macd, use_container_width=True)
-
 # --- Prediksi Probabilitas Naik ---
 last = df[features].tail(1)
 proba = model_xgb.predict_proba(last)[0][1]
+
+# --- Layout Dashboard ---
 st.metric("Probabilitas Naik (%)", round(proba*100,2))
-
-# --- Mode AI ---
 ai_mode = st.radio("Mode AI:", ["Local AI", "ChatGPT"])
-
-# --- Input pertanyaan ---
 question = st.text_input("Tanyakan sesuatu tentang saham ini:")
+
+# --- Grafik dengan Tabs ---
+tab1, tab2, tab3 = st.tabs(["📊 Harga & MA", "📈 RSI", "📉 MACD"])
+
+# --- Tab Harga & MA ---
+with tab1:
+    fig_price = go.Figure()
+    fig_price.add_trace(go.Scatter(x=df['Date'], y=df['Close'], name="Close",
+                                   line=dict(color='blue', width=2)))
+    if 'MA20' in df.columns:
+        fig_price.add_trace(go.Scatter(x=df['Date'], y=df['MA20'], name="MA20",
+                                       line=dict(color='orange', width=2, dash='dash')))
+    if 'MA50' in df.columns:
+        fig_price.add_trace(go.Scatter(x=df['Date'], y=df['MA50'], name="MA50",
+                                       line=dict(color='purple', width=2, dash='dot')))
+
+    # Support & Resistance
+    support = df['Close'].min()
+    resistance = df['Close'].max()
+    if not pd.isna(support):
+        fig_price.add_hline(y=support, line_dash="dot", line_color="green", annotation_text="Support")
+    if not pd.isna(resistance):
+        fig_price.add_hline(y=resistance, line_dash="dot", line_color="red", annotation_text="Resistance")
+
+    fig_price.update_layout(title=f"{selected_saham} Harga & MA",
+                            xaxis_title="Tanggal", yaxis_title="Harga",
+                            legend_title="Indikator", font=dict(size=14),
+                            margin=dict(l=40, r=40, t=40, b=40))
+    st.plotly_chart(fig_price, use_container_width=True)
+
+# --- Tab RSI ---
+with tab2:
+    fig_rsi = go.Figure()
+    fig_rsi.add_trace(go.Scatter(x=df['Date'], y=df['RSI'], name="RSI", line=dict(color='magenta', width=2)))
+    fig_rsi.add_hline(y=70, line_dash="dot", line_color="red", annotation_text="Overbought")
+    fig_rsi.add_hline(y=30, line_dash="dot", line_color="green", annotation_text="Oversold")
+    fig_rsi.update_layout(title=f"{selected_saham} RSI", xaxis_title="Tanggal", yaxis_title="RSI")
+    st.plotly_chart(fig_rsi, use_container_width=True)
+
+# --- Tab MACD ---
+with tab3:
+    fig_macd = go.Figure()
+    fig_macd.add_trace(go.Scatter(x=df['Date'], y=df['MACD'], name="MACD", line=dict(color='blue', width=2)))
+    fig_macd.add_trace(go.Scatter(x=df['Date'], y=df['MACD_signal'], name="Signal", line=dict(color='orange', width=2)))
+    fig_macd.update_layout(title=f"{selected_saham} MACD", xaxis_title="Tanggal", yaxis_title="MACD")
+    st.plotly_chart(fig_macd, use_container_width=True)
+
+# --- AI Analysis ---
 if question:
     mode = "local" if ai_mode == "Local AI" else "gpt"
     answer = ask_ai(selected_saham, df, question, mode)
