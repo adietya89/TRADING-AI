@@ -12,7 +12,9 @@ df = prepare_data(selected_saham)
 last = df[features].tail(1)
 proba = model_xgb.predict_proba(last)[0][1]
 st.metric("Probabilitas Naik (%)", round(proba * 100, 2))
-
+st.write("Kolom di df:", df.columns.tolist())
+st.write("5 data teratas:", df.head())
+st.write("Ada NaN di df?", df.isna().any())
 fig = px.line(df, x="Date", y=["Close", "MA20", "MA50"], title=f"{selected_saham} Chart")
 st.plotly_chart(fig)
 
