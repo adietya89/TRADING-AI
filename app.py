@@ -1,3 +1,6 @@
+st.write("Test import utils...")
+from utils import prepare_data
+st.write("utils berhasil diimport!")
 import streamlit as st
 import plotly.express as px
 from utils import prepare_data, model_xgb, features
