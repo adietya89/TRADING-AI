@@ -6,10 +6,15 @@ features = ["Open", "High", "Low", "Close", "Volume"]
 
 def prepare_data(saham):
     df = yf.download(saham + ".JK", period="3mo", progress=False)
+    
+    # Jika multi-level columns, ratakan jadi satu level dengan join '_'
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = ['_'.join(col).strip() for col in df.columns.values]
+    
     df = df.reset_index()
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
-    df = df.dropna()  # Ini penting untuk hilangkan baris yg masih NaN di MA20/MA50
+    df = df.dropna()
     return df
 
 class DummyModel:
