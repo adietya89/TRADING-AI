@@ -5,12 +5,11 @@ import numpy as np
 features = ["Open", "High", "Low", "Close", "Volume"]
 
 def prepare_data(saham):
-    # Ambil data 3 bulan terakhir dari Yahoo Finance
     df = yf.download(saham + ".JK", period="3mo", progress=False)
     df = df.reset_index()
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
-    df = df.dropna()
+    df = df.dropna()  # Ini penting untuk hilangkan baris yg masih NaN di MA20/MA50
     return df
 
 class DummyModel:
