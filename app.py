@@ -3,7 +3,7 @@ import plotly.express as px
 from utils import prepare_data, model_xgb, features
 from chatgpt_integration import ask_ai
 
-st.title("📈 AI Trading Hedge Fund Dashboard (Upgrade)")
+st.title("📈 AI Trading Hedge Fund Dashboard")
 
 # Pilihan saham
 saham_list = ["BBRI", "BBCA", "BMRI", "TLKM", "ASII", "ADRO", "ANTM"]
@@ -12,7 +12,7 @@ selected_saham = st.selectbox("Pilih Saham", saham_list)
 # Ambil data
 df = prepare_data(selected_saham)
 
-# Grafik
+# Grafik Close + MA20 + MA50 (long format)
 df_long = df.melt(id_vars=["Date"], value_vars=["Close", "MA20", "MA50"],
                   var_name="Indicator", value_name="Value")
 fig = px.line(df_long, x="Date", y="Value", color="Indicator",
