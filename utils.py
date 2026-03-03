@@ -1,19 +1,14 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
-from xgboost import XGBClassifier
-import joblib
-import os
 
 features = ["Open", "High", "Low", "Close", "Volume"]
-MODEL_FILE = "xgb_model.pkl"
 
 def prepare_data(saham):
-    # Ambil data 3 bulan terakhir
     df = yf.download(saham + ".JK", period="3mo", progress=False)
 
+    # Jika data kosong, buat dummy supaya app tetap jalan
     if df.empty:
-        # Jika data tidak ada, buat DataFrame dummy supaya app tidak crash
         dates = pd.date_range(end=pd.Timestamp.today(), periods=60)
         df = pd.DataFrame({
             "Date": dates,
@@ -28,33 +23,27 @@ def prepare_data(saham):
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = ['_'.join([str(c) for c in col if c]).strip() for col in df.columns.values]
 
-    df = df.reset_index(drop=True)
+    df = df.reset_index()
 
-    # Rename kolom jika perlu
-    col_map = {}
-    for col in features:
-        found = [c for c in df.columns if col.lower() in c.lower()]
-        if not found:
-            raise ValueError(f"Kolom {col} tidak ditemukan di df")
-        col_map[col] = found[0]
-    df = df.rename(columns=col_map)
+    # Cari kolom Close yang tersedia
+    close_col = None
+    for c in df.columns:
+        if "close" in c.lower():
+            close_col = c
+            break
+    if close_col is None:
+        raise ValueError(f"Tidak ada kolom Close di data. Kolom tersedia: {df.columns.tolist()}")
+    df = df.rename(columns={close_col: "Close"})
+
+    # Rename kolom lain yang ada
+    for col in ["Open","High","Low","Volume"]:
+        for c in df.columns:
+            if col.lower() in c.lower():
+                df = df.rename(columns={c: col})
+                break
 
     # Tambah MA20 & MA50
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
-
-    # Drop NaN
     df = df.dropna().reset_index(drop=True)
     return df
-
-def load_xgb_model():
-    # Load model XGBoost, kalau tidak ada buat dummy sederhana
-    if os.path.exists(MODEL_FILE):
-        model = joblib.load(MODEL_FILE)
-    else:
-        model = XGBClassifier()
-        model.fit(np.random.rand(50, len(features)), np.random.randint(0,2,50))
-        joblib.dump(model, MODEL_FILE)
-    return model
-
-model_xgb = load_xgb_model()
