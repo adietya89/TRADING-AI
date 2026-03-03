@@ -6,4 +6,4 @@ yfinance
 xgboost
 scikit-learn
 joblib
-openai
+openai>=1.0.0
