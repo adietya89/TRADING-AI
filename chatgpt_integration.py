@@ -14,7 +14,20 @@ def analyze_stock(df, saham, question=None):
 
     text = f"""
 📈 Analisis Saham {saham} (AI Lokal)
-Harga terakhir: Rp {close:,.0f}
+def analyze_stock(df, saham, question):
+    last_row = df.iloc[-1]
+    close = last_row.get('Close', None)
+
+    # cek apakah close valid
+    if close is None or not isinstance(close, (int, float)) or np.isnan(close):
+        formatted_close = "N/A"
+    else:
+        formatted_close = f"{close:,.0f}"
+
+    # Contoh jawaban AI
+    result = f"Harga terakhir: Rp {formatted_close}\n"
+    result += "Analisis lain bisa ditambahkan di sini..."
+    return result
 Trend MA: {trend}
 MA20: {ma20:,.0f}, MA50: {ma50:,.0f}
 RSI: {rsi:.2f} → {rsi_status}
