@@ -1,3 +1,7 @@
+import streamlit
+import pandas
+import numpy
+import plotly
 import streamlit as st
 from utils import prepare_data, model_xgb, model_lstm, features
 from chatgpt_integration import ask_ai
