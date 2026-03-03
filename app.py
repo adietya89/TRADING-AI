@@ -31,13 +31,3 @@ question = st.text_input("Tanyakan sesuatu tentang saham ini:")
 if question:
     answer = ask_ai(selected_saham, df, question)
     st.write(answer)
-
-# Pilih mode AI
-ai_mode = st.radio("Mode AI:", ["Local AI", "ChatGPT"])
-
-question = st.text_input("Tanyakan sesuatu tentang saham ini:")
-
-if question:
-    mode = "local" if ai_mode == "Local AI" else "gpt"
-    answer = ask_ai(selected_saham, df, question, mode)
-    st.write(answer)
