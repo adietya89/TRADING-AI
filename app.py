@@ -12,7 +12,7 @@ selected_saham = st.selectbox("Pilih Saham", saham_list)
 # Ambil data
 df = prepare_data(selected_saham)
 
-# Grafik Close + MA20 + MA50 (long format)
+# Plot grafik Close + MA20 + MA50
 df_long = df.melt(id_vars=["Date"], value_vars=["Close", "MA20", "MA50"],
                   var_name="Indicator", value_name="Value")
 fig = px.line(df_long, x="Date", y="Value", color="Indicator",
