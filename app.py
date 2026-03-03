@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 from utils import prepare_data, model_xgb, features
+st.write("Fungsi ask_ai ada?", callable(ask_ai))
 from chatgpt_integration import ask_ai
 
 st.title("📈 AI Trading Hedge Fund Dashboard")
