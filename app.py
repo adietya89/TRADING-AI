@@ -37,20 +37,3 @@ st.plotly_chart(fig)
 last = df[features].tail(1)
 proba = model_xgb.predict_proba(last)[0][1]
 st.metric("Probabilitas Naik (%)", round(proba * 100, 2))
-
-
-# =============================
-# 🔥 BAGIAN AI TARUH DI SINI
-# =============================
-
-st.subheader("🤖 AI Analysis")
-
-# Pilih mode AI
-ai_mode = st.radio("Mode AI:", ["Local AI", "ChatGPT"])
-
-question = st.text_input("Tanyakan sesuatu tentang saham ini:")
-
-if question:
-    mode = "local" if ai_mode == "Local AI" else "gpt"
-    answer = ask_ai(selected_saham, df, question, mode)
-    st.write(answer)
