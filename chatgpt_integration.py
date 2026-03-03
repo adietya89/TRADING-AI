@@ -5,7 +5,6 @@ import os
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def ask_ai(saham, df, question):
-    # Ringkasan harga terakhir
     close_price = df['Close'].iloc[-1]
     prompt = f"Harga terakhir {saham} adalah {close_price:.2f}. Pertanyaan: {question} Jawab dengan bahasa Indonesia secara singkat dan jelas."
     
