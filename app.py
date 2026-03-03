@@ -1,4 +1,3 @@
-from utils import prepare_data
 import streamlit as st
 import plotly.express as px
 from utils import prepare_data, model_xgb, features
