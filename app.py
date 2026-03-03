@@ -17,7 +17,7 @@ if df is None or df.empty:
     st.error("Data tidak tersedia.")
     st.stop()
 
-# Grafik Close + MA20 + MA50 + Support/Resistance
+# Grafik Close + MA20 + MA50
 fig = go.Figure()
 fig.add_trace(go.Scatter(x=df['Date'], y=df['Close'], name="Close", line=dict(color='blue')))
 if 'MA20' in df.columns:
@@ -25,12 +25,25 @@ if 'MA20' in df.columns:
 if 'MA50' in df.columns:
     fig.add_trace(go.Scatter(x=df['Date'], y=df['MA50'], name="MA50", line=dict(color='purple')))
 
-# Support & Resistance aman
+# Hitung support & resistance aman
 support = df['Close'].min()
 resistance = df['Close'].max()
-if not pd.isna(support):
+
+# Pastikan support/resistance adalah angka valid
+try:
+    support = float(support)
+except (TypeError, ValueError):
+    support = None
+
+try:
+    resistance = float(resistance)
+except (TypeError, ValueError):
+    resistance = None
+
+# Tambahkan garis hanya jika valid
+if support is not None:
     fig.add_hline(y=support, line_dash="dot", line_color="green", annotation_text="Support")
-if not pd.isna(resistance):
+if resistance is not None:
     fig.add_hline(y=resistance, line_dash="dot", line_color="red", annotation_text="Resistance")
 
 st.plotly_chart(fig, use_container_width=True)
@@ -41,7 +54,7 @@ proba = model_xgb.predict_proba(last)[0][1]
 st.metric("Probabilitas Naik (%)", round(proba*100,2))
 
 # Pilih mode AI
-ai_mode = st.radio("Mode AI:", ["Local AI"])  # bisa ditambah ChatGPT kalau API siap
+ai_mode = st.radio("Mode AI:", ["Local AI"])  # Bisa tambah ChatGPT kalau API siap
 
 # Input pertanyaan user
 question = st.text_input("Tanyakan sesuatu tentang saham ini:")
