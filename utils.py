@@ -1,13 +1,16 @@
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from xgboost import XGBClassifier
+import joblib
+import os
 
 features = ["Open", "High", "Low", "Close", "Volume"]
+MODEL_FILE = "xgb_model.pkl"
 
 def prepare_data(saham):
     df = yf.download(saham + ".JK", period="3mo", progress=False)
 
-    # Jika data kosong, buat dummy supaya app tetap jalan
     if df.empty:
         dates = pd.date_range(end=pd.Timestamp.today(), periods=60)
         df = pd.DataFrame({
@@ -25,7 +28,7 @@ def prepare_data(saham):
 
     df = df.reset_index()
 
-    # Cari kolom Close yang tersedia
+    # Pastikan kolom Close ada
     close_col = None
     for c in df.columns:
         if "close" in c.lower():
@@ -35,15 +38,26 @@ def prepare_data(saham):
         raise ValueError(f"Tidak ada kolom Close di data. Kolom tersedia: {df.columns.tolist()}")
     df = df.rename(columns={close_col: "Close"})
 
-    # Rename kolom lain yang ada
+    # Rename kolom lain
     for col in ["Open","High","Low","Volume"]:
         for c in df.columns:
             if col.lower() in c.lower():
                 df = df.rename(columns={c: col})
                 break
 
-    # Tambah MA20 & MA50
+    # MA20 & MA50
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
     df = df.dropna().reset_index(drop=True)
     return df
+
+def load_xgb_model():
+    if os.path.exists(MODEL_FILE):
+        model = joblib.load(MODEL_FILE)
+    else:
+        model = XGBClassifier()
+        model.fit(np.random.rand(50, len(features)), np.random.randint(0,2,50))
+        joblib.dump(model, MODEL_FILE)
+    return model
+
+model_xgb = load_xgb_model()
