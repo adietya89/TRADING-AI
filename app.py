@@ -8,15 +8,17 @@ st.title("📈 AI Trading Hedge Fund Dashboard")
 saham_list = ["BBRI", "BBCA", "BMRI", "TLKM", "ASII", "ADRO", "ANTM"]
 selected_saham = st.selectbox("Pilih Saham", saham_list)
 
-df = prepare_data(selected_saham)
-last = df[features].tail(1)
-proba = model_xgb.predict_proba(last)[0][1]
-st.metric("Probabilitas Naik (%)", round(proba * 100, 2))
-st.write("Kolom di df:", df.columns.tolist())
-st.write("5 data teratas:", df.head())
-st.write("Ada NaN di df?", df.isna().any())
-fig = px.line(df, x="Date", y=["Close", "MA20", "MA50"], title=f"{selected_saham} Chart")
-st.plotly_chart(fig)
+def prepare_data(saham):
+    df = yf.download(saham + ".JK", period="3mo", progress=False)
+    df = df.reset_index()
+    
+    # Ambil kolom yang diperlukan dan rename ke nama standar
+    df = df[['Date', 'Open', 'High', 'Low', 'Close', 'Volume']]
+    
+    df["MA20"] = df["Close"].rolling(20).mean()
+    df["MA50"] = df["Close"].rolling(50).mean()
+    df = df.dropna()
+    return df
 
 question = st.text_input("Tanyakan sesuatu tentang saham ini:")
 if question:
