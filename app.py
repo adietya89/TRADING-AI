@@ -1,5 +1,6 @@
 import streamlit as st
-from utils import prepare_data, model_xgb, model_lstm, features, ask_ai
+from utils import prepare_data, model_xgb, model_lstm, features
+from chatgpt_integration import ask_ai
 import plotly.express as px
 
 st.title("📈 AI Trading Hedge Fund Dashboard")
