@@ -44,38 +44,44 @@ df['MACD'], df['MACD_signal'] = compute_MACD(df['Close'])
 # --- Prediksi Probabilitas Naik ---
 last = df[features].tail(1)
 proba = model_xgb.predict_proba(last)[0][1]
-
-# --- Layout Dashboard ---
 st.metric("Probabilitas Naik (%)", round(proba*100,2))
+
+# --- Pilih Mode AI ---
 ai_mode = st.radio("Mode AI:", ["Local AI", "ChatGPT"])
 question = st.text_input("Tanyakan sesuatu tentang saham ini:")
 
-# --- Grafik dengan Tabs ---
+# --- Dashboard Tabs ---
 tab1, tab2, tab3 = st.tabs(["📊 Harga & MA", "📈 RSI", "📉 MACD"])
 
 # --- Tab Harga & MA ---
 with tab1:
     fig_price = go.Figure()
-    fig_price.add_trace(go.Scatter(x=df['Date'], y=df['Close'], name="Close",
-                                   line=dict(color='blue', width=2)))
+    # Candlestick
+    fig_price.add_trace(go.Candlestick(
+        x=df['Date'],
+        open=df['Open'],
+        high=df['High'],
+        low=df['Low'],
+        close=df['Close'],
+        name="Candlestick"
+    ))
+    # Moving Averages
     if 'MA20' in df.columns:
         fig_price.add_trace(go.Scatter(x=df['Date'], y=df['MA20'], name="MA20",
                                        line=dict(color='orange', width=2, dash='dash')))
     if 'MA50' in df.columns:
         fig_price.add_trace(go.Scatter(x=df['Date'], y=df['MA50'], name="MA50",
                                        line=dict(color='purple', width=2, dash='dot')))
-
-    # Support & Resistance
+    
     # Support & Resistance aman
     if 'Close' in df.columns and not df['Close'].empty:
-       support = df['Close'].min()
-       resistance = df['Close'].max()
-
-       if pd.notna(support):
-           fig_price.add_hline(y=float(support), line_dash="dot", line_color="green", annotation_text="Support")
-       if pd.notna(resistance):
-           fig_price.add_hline(y=float(resistance), line_dash="dot", line_color="red", annotation_text="Resistance")
-
+        support = df['Close'].min()
+        resistance = df['Close'].max()
+        if pd.notna(support):
+            fig_price.add_hline(y=float(support), line_dash="dot", line_color="green", annotation_text="Support")
+        if pd.notna(resistance):
+            fig_price.add_hline(y=float(resistance), line_dash="dot", line_color="red", annotation_text="Resistance")
+    
     fig_price.update_layout(title=f"{selected_saham} Harga & MA",
                             xaxis_title="Tanggal", yaxis_title="Harga",
                             legend_title="Indikator", font=dict(size=14),
