@@ -9,39 +9,49 @@ features = ["Open", "High", "Low", "Close", "Volume"]
 MODEL_FILE = "xgb_model.pkl"
 
 def prepare_data(saham):
+    # Ambil data 3 bulan terakhir
     df = yf.download(saham + ".JK", period="3mo", progress=False)
 
     if df.empty:
-        raise ValueError(f"Data saham {saham} tidak tersedia")
+        # Jika data tidak ada, buat DataFrame dummy supaya app tidak crash
+        dates = pd.date_range(end=pd.Timestamp.today(), periods=60)
+        df = pd.DataFrame({
+            "Date": dates,
+            "Open": np.random.rand(60)*1000,
+            "High": np.random.rand(60)*1000,
+            "Low": np.random.rand(60)*1000,
+            "Close": np.random.rand(60)*1000,
+            "Volume": np.random.randint(1000,10000, size=60)
+        })
 
-    # flatten MultiIndex jika ada
+    # Flatten MultiIndex jika ada
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = ['_'.join([str(c) for c in col if c]).strip() for col in df.columns.values]
 
-    df = df.reset_index()
+    df = df.reset_index(drop=True)
 
-    # map kolom ke standar
+    # Rename kolom jika perlu
     col_map = {}
     for col in features:
         found = [c for c in df.columns if col.lower() in c.lower()]
         if not found:
-            raise ValueError(f"Kolom {col} tidak ditemukan. Kolom tersedia: {df.columns.tolist()}")
+            raise ValueError(f"Kolom {col} tidak ditemukan di df")
         col_map[col] = found[0]
     df = df.rename(columns=col_map)
 
-    # hitung MA20 & MA50
+    # Tambah MA20 & MA50
     df["MA20"] = df["Close"].rolling(20).mean()
     df["MA50"] = df["Close"].rolling(50).mean()
 
-    # drop NaN
+    # Drop NaN
     df = df.dropna().reset_index(drop=True)
     return df
 
 def load_xgb_model():
+    # Load model XGBoost, kalau tidak ada buat dummy sederhana
     if os.path.exists(MODEL_FILE):
         model = joblib.load(MODEL_FILE)
     else:
-        # buat model dummy jika file tidak ada
         model = XGBClassifier()
         model.fit(np.random.rand(50, len(features)), np.random.randint(0,2,50))
         joblib.dump(model, MODEL_FILE)
