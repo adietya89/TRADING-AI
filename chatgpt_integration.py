@@ -23,13 +23,13 @@ def analyze_stock(df, saham):
     rsi = 100 - (100 / (1 + rs))
     rsi_last = rsi.iloc[-1]
 
-    # Output seperti ChatGPT
+    # Output AI Lokal
     text = f"""
 📈 Analisis Saham {saham} (AI Lokal)
-Harga terakhir: {close:,.0f}
+Harga terakhir: Rp {close:,.0f}
 Trend: {trend}
 MA20: {ma20:,.0f}, MA50: {ma50:,.0f}
-Support: {support:,.0f}, Resistance: {resistance:,.0f}
+Support: Rp {support:,.0f}, Resistance: Rp {resistance:,.0f}
 RSI: {rsi_last:.2f} → {'Overbought' if rsi_last>70 else 'Oversold' if rsi_last<30 else 'Netral'}
 
 Skenario Pergerakan:
@@ -45,5 +45,4 @@ Strategi Umum:
     return text
 
 def ask_ai(saham, df, question=None, mode="local"):
-    # Mode lokal
     return analyze_stock(df, saham)
