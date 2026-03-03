@@ -1,15 +1,14 @@
 import openai
 import os
 
-# Ambil API key dari environment variable
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def ask_ai(saham, df, question):
     close_price = df['Close'].iloc[-1]
-    prompt = f"Harga terakhir {saham} adalah {close_price:.2f}. Pertanyaan: {question} Jawab dengan bahasa Indonesia secara singkat dan jelas."
-    
+    prompt = f"Harga terakhir {saham} adalah {close_price:.2f}. Pertanyaan: {question} Jawab singkat dalam bahasa Indonesia."
+
     try:
-        response = openai.ChatCompletion.create(
+        response = openai.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.5
