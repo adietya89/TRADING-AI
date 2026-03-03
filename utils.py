@@ -1,19 +1,22 @@
 import pandas as pd
 import numpy as np
 
-# Contoh daftar fitur
 features = ["Open", "High", "Low", "Close", "Volume"]
 
-# Fungsi untuk menyiapkan data
-def prepare_data(df):
-    df = df.copy()
-    df = df.dropna()
+def prepare_data(saham):
+    # bikin data dummy supaya tidak error
+    dates = pd.date_range(end=pd.Timestamp.today(), periods=100)
+    
+    df = pd.DataFrame({
+        "Date": dates,
+        "Open": np.random.rand(100)*100,
+        "High": np.random.rand(100)*100,
+        "Low": np.random.rand(100)*100,
+        "Close": np.random.rand(100)*100,
+        "Volume": np.random.randint(1000, 5000, 100)
+    })
+    
+    df["MA20"] = df["Close"].rolling(20).mean()
+    df["MA50"] = df["Close"].rolling(50).mean()
+    
     return df
-
-# Model XGBoost (dummy dulu supaya tidak error)
-def model_xgb(X_train, y_train):
-    return "Model XGB berhasil dijalankan (dummy)"
-
-# Model LSTM (dummy dulu supaya tidak error)
-def model_lstm(X_train, y_train):
-    return "Model LSTM berhasil dijalankan (dummy)"
